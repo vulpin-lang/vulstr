@@ -1,157 +1,224 @@
-# string.vul
+# vulstr.vul
 # String utilities for Vulpin
+# Note: Vulpin already has .U .L .S .T .C builtins
+# These are extra utilities
 
-F upper
-    s=K
-    r=""
-    i=0
-    ? i<len(s)
-        c=s[i]
-        ? c>="a" & c<="z"
-            r=r+chr(ord(c)-32)
-        :
-            r=r+c
-        ;
-        i=i+1
-        ;
+F strlen(s)
+    R len(s)
+~
+
+F strcat(a, b)
+    R a + b
+~
+
+F str_repeat(s, n)
+    r = ""
+    i = 0
+    @ i < n
+        r = r + s
+        i = i + 1
+    &
     R r
 ~
 
-F lower
-    s=K
-    r=""
-    i=0
-    ? i<len(s)
-        c=s[i]
-        ? c>="A" & c<="Z"
-            r=r+chr(ord(c)+32)
-        :
-            r=r+c
+F str_contains(s, p)
+    i = 0
+    @ i <= len(s) - len(p)
+        ? s[i:i+len(p)] = p
+            R 1
         ;
-        i=i+1
-        ;
+        i = i + 1
+    &
+    R 0
+~
+
+F str_starts(s, p)
+    ? len(p) > len(s)
+        R 0
+    ;
+    R s[0:len(p)] = p
+~
+
+F str_ends(s, p)
+    ? len(p) > len(s)
+        R 0
+    ;
+    R s[len(s)-len(p):] = p
+~
+
+F str_reverse(s)
+    r = ""
+    i = len(s) - 1
+    @ i >= 0
+        r = r + s[i]
+        i = i - 1
+    &
     R r
 ~
 
-F trim
-    s=K
-    i=0
-    ? i<len(s) & s[i]=" "
-        i=i+1
+F str_slice(s, start, end)
+    R s[start:end]
+~
+
+F str_replace(s, old, new)
+    r = ""
+    i = 0
+    @ i < len(s)
+        ? s[i:i+len(old)] = old
+            r = r + new
+            i = i + len(old)
         ;
-    j=len(s)-1
-    ? j>=0 & s[j]=" "
-        j=j-1
+            r = r + s[i]
+            i = i + 1
         ;
-    ? i>j
+    &
+    R r
+~
+
+F str_count(s, p)
+    c = 0
+    i = 0
+    @ i <= len(s) - len(p)
+        ? s[i:i+len(p)] = p
+            c = c + 1
+            i = i + len(p)
+        ;
+            i = i + 1
+        ;
+    &
+    R c
+~
+
+F str_find(s, p)
+    i = 0
+    @ i <= len(s) - len(p)
+        ? s[i:i+len(p)] = p
+            R i
+        ;
+        i = i + 1
+    &
+    R -1
+~
+
+F str_join(arr, sep)
+    r = ""
+    i = 0
+    @ i < len(arr)
+        ? i > 0
+            r = r + sep
+        ;
+        r = r + arr[i]
+        i = i + 1
+    &
+    R r
+~
+
+F str_split(s, d)
+    r = []
+    c = ""
+    i = 0
+    @ i < len(s)
+        ? s[i] = d
+            r = r + [c]
+            c = ""
+        ;
+            c = c + s[i]
+        ;
+        i = i + 1
+    &
+    r = r + [c]
+    R r
+~
+
+F str_trim(s)
+    i = 0
+    @ i < len(s) & s[i] = " "
+        i = i + 1
+    &
+    j = len(s) - 1
+    @ j >= 0 & s[j] = " "
+        j = j - 1
+    &
+    ? i > j
         R ""
     ;
     R s[i:j+1]
 ~
 
-F split
-    s=K
-    d=K
-    r=[]
-    c=""
-    i=0
-    ? i<len(s)
-        ? s[i]=d
-            r=r+[c]
-            c=""
-        :
-            c=c+s[i]
-        ;
-        i=i+1
-        ;
-    r=r+[c]
+F str_lpad(s, n, c)
+    r = s
+    @ len(r) < n
+        r = c + r
+    &
     R r
 ~
 
-F join
-    a=K
-    d=K
-    r=""
-    i=0
-    ? i<len(a)
-        ? i>0
-            r=r+d
-        ;
-        r=r+a[i]
-        i=i+1
-        ;
+F str_rpad(s, n, c)
+    r = s
+    @ len(r) < n
+        r = r + c
+    &
     R r
 ~
 
-F replace
-    s=K
-    o=K
-    n=K
-    r=""
-    i=0
-    ? i<len(s)
-        ? s[i:i+len(o)]=o
-            r=r+n
-            i=i+len(o)
-        :
-            r=r+s[i]
-            i=i+1
-        ;
-        ;
-    R r
-~
-
-F repeat
-    s=K
-    n=K
-    r=""
-    i=0
-    ? i<n
-        r=r+s
-        i=i+1
-        ;
-    R r
-~
-
-F starts_with
-    s=K
-    p=K
-    ? len(p)>len(s)
+F str_isdigit(s)
+    ? len(s) = 0
         R 0
     ;
-    R s[0:len(p)]=p
+    i = 0
+    @ i < len(s)
+        ? s[i] < "0" | s[i] > "9"
+            R 0
+        ;
+        i = i + 1
+    &
+    R 1
 ~
 
-F ends_with
-    s=K
-    p=K
-    ? len(p)>len(s)
+F str_isalpha(s)
+    ? len(s) = 0
         R 0
     ;
-    R s[len(s)-len(p):]=p
+    i = 0
+    @ i < len(s)
+        c = s[i]
+        ? (c < "a" | c > "z") & (c < "A" | c > "Z")
+            R 0
+        ;
+        i = i + 1
+    &
+    R 1
 ~
 
-F contains
-    s=K
-    p=K
-    i=0
-    ? i<=len(s)-len(p)
-        ? s[i:i+len(p)]=p
-            R 1
+F str_isalnum(s)
+    ? len(s) = 0
+        R 0
+    ;
+    i = 0
+    @ i < len(s)
+        c = s[i]
+        ? (c < "a" | c > "z") & (c < "A" | c > "Z") & (c < "0" | c > "9")
+            R 0
         ;
-        i=i+1
-        ;
-    R 0
+        i = i + 1
+    &
+    R 1
 ~
 
-F reverse
-    s=K
-    r=""
-    i=len(s)-1
-    ? i>=0
-        r=r+s[i]
-        i=i-1
-        ;
-    R r
+F str_toint(s)
+    R int(s)
 ~
 
+F str_tofloat(s)
+    R float(s)
+~
+
+F str_cmp(a, b)
+    ? a = b
+        R 0
+    ;
+    ? a < b
+        R -1
+    ;
+    R 1
+~
