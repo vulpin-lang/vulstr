@@ -1,0 +1,8 @@
+[package]
+name = "vulstr"
+version = "0.1.0"
+description = ""
+author = ""
+license = "MIT"
+
+[deps]
