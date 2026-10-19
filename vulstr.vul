@@ -1,0 +1,231 @@
+# vulstr.vul - extra string tools for Vulpin
+# built in already: len + s[a:b] .U .L .S .T .C .R(o,n) .F(p) .SP .SP(d) sep.J(l)
+# checks return true/false, ! = optional arg
+#
+# has(s,p) contains     sw(s,p) starts with   ew(s,p) ends with
+# rf(s,p) last index    fa(s,p) all indexes   ct(s,p) count
+# rpt(s,n) repeat       rv(s) reverse         rn(s,o,n,k) replace first k
+# ins(s,i,t) insert     dp(s,p) drop prefix   ds(s,p) drop suffix
+# tr(s,n,!t) truncate   sqz(s) squeeze spaces swc(s) swap case
+# pt(s,d) partition     ln(s) lines           ch(s) chars
+# lt(s) left trim       rt(s) right trim      stc(s,c) strip chars c
+# lp(s,n,!c) left pad   rp(s,n,!c) right pad  ce(s,n,!c) center
+# zf(s,n) zero fill     isd isa isan iss isb islo isup isnum ispal (s)
+# ti(s,!d) to Int       tf(s,!d) to Float     od(c) ord   chr(n) char
+# cmp(a,b) -1/0/1       icmp(a,b) no case     ieq(a,b) equal no case
+#
+# note: U"vulstr" runs in its own scope, so paste what you need for now
+
+asc=" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+Fhas(s,p)
+R s.F(p)!=-1
+~
+Fsw(s,p)
+R s[0:len(p)]==p
+~
+Few(s,p)
+R len(p)==0?true:len(p)<=len(s)&s[len(s)-len(p):]==p
+~
+Frf(s,p)
+i=len(s)-len(p)
+@i>=0
+?s[i:i+len(p)]==p;R i;;
+i=i-1
+&
+R -1
+~
+Ffa(s,p)
+r=[]
+i=0
+@len(p)>0&i<=len(s)-len(p)
+?s[i:i+len(p)]==p
+push(r,i)
+i=i+len(p)
+:
+i=i+1
+;
+&
+R r
+~
+Fct(s,p)
+R len(fa(s,p))
+~
+Frpt(s,n)
+r=""
+O i 0 n
+r=r+s
+&
+R r
+~
+Frv(s)
+r=""
+O i 0 len(s)
+r=s[i]+r
+&
+R r
+~
+Frn(s,o,n,k)
+?len(o)==0;R s;;
+r=""
+i=0
+@i<len(s)
+?k>0&s[i:i+len(o)]==o
+r=r+n
+i=i+len(o)
+k=k-1
+:
+r=r+s[i]
+i=i+1
+;
+&
+R r
+~
+Fins(s,i,t)
+R s[:i]+t+s[i:]
+~
+Fdp(s,p)
+R len(p)>0&sw(s,p)?s[len(p):]:s
+~
+Fds(s,p)
+R len(p)>0&ew(s,p)?s[:len(s)-len(p)]:s
+~
+Ftr(s,n,!t)
+?t==None;t="...";;
+?len(s)<=n;R s;;
+R n<=len(t)?t[:n]:s[:n-len(t)]+t
+~
+Fsqz(s)
+R " ".J(s.SP)
+~
+Fswc(s)
+r=""
+O i 0 len(s)
+r=r+(s[i]!=s[i].U?s[i].U:s[i].L)
+&
+R r
+~
+Fpt(s,d)
+i=s.F(d)
+R i==-1|len(d)==0?[s,"",""]:[s[:i],d,s[i+len(d):]]
+~
+Fln(s)
+R s.R("\r\n","\n").SP("\n")
+~
+Fch(s)
+R s.SP("")
+~
+Fws(c)
+R c==" "|c=="\t"|c=="\n"|c=="\r"
+~
+Flt(s)
+i=0
+@i<len(s)&ws(s[i])
+i=i+1
+&
+R s[i:]
+~
+Frt(s)
+j=len(s)
+@j>0&ws(s[j-1])
+j=j-1
+&
+R s[:j]
+~
+Fstc(s,c)
+i=0
+@i<len(s)&has(c,s[i])
+i=i+1
+&
+j=len(s)
+@j>i&has(c,s[j-1])
+j=j-1
+&
+R s[i:j]
+~
+Flp(s,n,!c)
+?c==None|c=="";c=" ";;
+R rpt(c[0],n-len(s))+s
+~
+Frp(s,n,!c)
+?c==None|c=="";c=" ";;
+R s+rpt(c[0],n-len(s))
+~
+Fce(s,n,!c)
+?c==None|c=="";c=" ";;
+t=n-len(s)
+?t<=0;R s;;
+R rpt(c[0],t/2)+s+rpt(c[0],t-t/2)
+~
+Fzf(s,n)
+R len(s)>0&(s[0]=="-"|s[0]=="+")?s[0]+lp(s[1:],n-1,"0"):lp(s,n,"0")
+~
+Fisd(s)
+?len(s)==0;R false;;
+O i 0 len(s)
+?s[i]<"0"|s[i]>"9";R false;;
+&
+R true
+~
+Fisa(s)
+?len(s)==0;R false;;
+O i 0 len(s)
+?s[i].L==s[i].U;R false;;
+&
+R true
+~
+Fisan(s)
+?len(s)==0;R false;;
+O i 0 len(s)
+?!isa(s[i])&!isd(s[i]);R false;;
+&
+R true
+~
+Fiss(s)
+R len(s)>0&len(lt(s))==0
+~
+Fisb(s)
+R len(lt(s))==0
+~
+Fislo(s)
+R s==s.L&s!=s.U
+~
+Fisup(s)
+R s==s.U&s!=s.L
+~
+Fisnum(s)
+t=dp(dp(s,"-"),"+")
+?isd(t);R true;;
+p=pt(t,".")
+?p[1]==""|len(p[0])+len(p[2])==0;R false;;
+R (len(p[0])==0|isd(p[0]))&(len(p[2])==0|isd(p[2]))
+~
+Fispal(s)
+t=s.L.R(" ","")
+R t==rv(t)
+~
+Fti(s,!d)
+?d==None;d=0;;
+t=s.S
+?!isd(dp(dp(t,"-"),"+"));R d;;
+R @(t*1,d)
+~
+Ftf(s,!d)
+?d==None;d=0.0;;
+R @(s.S*1+0.0,d)
+~
+Fod(c)
+i=len(c)==1?asc.F(c):-1
+R i==-1?-1:i+32
+~
+Fchr(n)
+R n<32|n>126?"":asc[n-32]
+~
+Fcmp(a,b)
+R a==b?0:(a<b?-1:1)
+~
+Ficmp(a,b)
+R cmp(a.L,b.L)
+~
+Fieq(a,b)
+R a.L==b.L
+~
